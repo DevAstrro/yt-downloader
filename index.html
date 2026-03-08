@@ -513,11 +513,12 @@
     document.getElementById('apiDot').className = 'api-dot checking';
     document.getElementById('apiStatus').textContent = 'Connecting...';
   }
-function setOnline() {
-  document.getElementById('apiDot').className = 'api-dot online';
-  let label = 'Server online ✓';
-  document.getElementById('apiLabel').textContent = label;
-}
+  function setOnline() {
+    document.getElementById('apiDot').className = 'api-dot online';
+    let label = 'Server online ✓';
+    if (API !== LOCAL) {
+      try { label = 'Connected · ' + new URL(API).hostname.split('.')[0]; } catch {}
+    }
     document.getElementById('apiStatus').textContent = label;
     document.getElementById('setupNotice').style.display = 'none';
   }
