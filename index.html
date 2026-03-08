@@ -367,7 +367,7 @@
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────
   const LOCAL      = "http://localhost:10000";
-  const CLOUDFLARE = "https://coverage-corporate-commodity-input.trycloudflare.com";
+  const CLOUDFLARE = "https://ontario-sodium-lecture-rugs.trycloudflare.com";
 
   // If opened as a file or from localhost → use local, otherwise use Cloudflare
   const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
@@ -387,10 +387,13 @@
     await checkServer();
   });
 
+  // ── CLOUDFLARE BYPASS HEADERS ───────────────────────────────────
+  const HEADERS = { 'ngrok-skip-browser-warning': 'true' };
+
   // ── SERVER CHECK ────────────────────────────────────────────────
   async function checkServer() {
     try {
-      const res = await fetch(`${API}/`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`${API}/`, { headers: HEADERS, signal: AbortSignal.timeout(5000) });
       if (res.ok) { setOnline(); return true; }
     } catch {}
     setOffline(); return false;
@@ -459,7 +462,7 @@
     setResults(`<div class="status-msg">Searching for "<strong>${escHtml(q)}</strong>"...</div>`);
 
     try {
-      const res  = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+      const res  = await fetch(`${API}/search?q=${encodeURIComponent(q)}`, { headers: HEADERS });
       const data = await res.json();
       if (!res.ok) {
         setResults(`<div class="status-msg error">❌ ${escHtml(data.error || 'Search failed')}</div>`);
