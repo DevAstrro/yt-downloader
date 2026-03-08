@@ -404,6 +404,17 @@
     </div>
   </header>
 
+  <!-- LOCAL SETUP NOTICE (only shows when server is offline) -->
+  <div id="setupNotice" style="display:none; background:#161616; border:1px solid #2a2a2a; border-left: 3px solid #ff3c3c; border-radius:12px; padding:20px 24px; margin-bottom:32px; animation: fadeUp 0.4s ease both;">
+    <p style="font-family:'Archivo Black',sans-serif; font-size:0.95rem; margin-bottom:12px;">⚠️ Local server not detected</p>
+    <p style="color:#888; font-size:0.85rem; line-height:1.8;">
+      This app requires the Python backend running on your PC.<br>
+      <strong style="color:#f0f0f0;">1.</strong> Install dependencies: <code style="background:#0a0a0a; padding:2px 8px; border-radius:4px; color:#ff7043;">pip install flask flask-cors yt-dlp</code><br>
+      <strong style="color:#f0f0f0;">2.</strong> Run the server: <code style="background:#0a0a0a; padding:2px 8px; border-radius:4px; color:#ff7043;">python app.py</code><br>
+      <strong style="color:#f0f0f0;">3.</strong> Refresh this page
+    </p>
+  </div>
+
   <div class="search-wrap">
     <div class="search-box">
       <input
@@ -452,7 +463,8 @@
       }
     } catch {
       dot.className = 'api-dot offline';
-      status.textContent = 'Server offline — run python app.py';
+      status.textContent = 'Server offline';
+      document.getElementById('setupNotice').style.display = 'block';
     }
   }
 
