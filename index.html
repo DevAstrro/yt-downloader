@@ -366,13 +366,19 @@
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────────────
-  const LOCAL = "http://localhost:10000";
-  let API = LOCAL;
+  const LOCAL      = "http://localhost:10000";
+  const CLOUDFLARE = "https://coverage-corporate-commodity-input.trycloudflare.com";
+
+  // If opened as a file or from localhost → use local, otherwise use Cloudflare
+  const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost';
+  let API = isLocal ? LOCAL : CLOUDFLARE;
+
   let currentFormat = 'mp3';
   const STORAGE_KEY = 'ytdl_api_url';
 
   // ── INIT ────────────────────────────────────────────────────────
   window.addEventListener('load', async () => {
+    // Allow manual override via gear button (stored in localStorage)
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       API = saved;
