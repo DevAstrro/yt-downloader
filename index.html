@@ -3,44 +3,576 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YT Downloader</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<title>YTDL — YouTube Downloader</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  /* === PASTE THE CSS FROM STEP 3 HERE === */
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --card: #161616;
+    --border: #242424;
+    --accent: #ff3c3c;
+    --accent2: #ff7043;
+    --text: #f0f0f0;
+    --muted: #666;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Archivo', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,60,60,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,60,60,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  header {
+    padding: 60px 0 40px;
+    text-align: center;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .logo-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  h1 {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  h1 span {
+    color: var(--accent);
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 8px;
+    font-weight: 300;
+  }
+
+  /* SEARCH BAR */
+  .search-wrap {
+    margin: 32px 0 48px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .search-box {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,60,60,0.12);
+  }
+
+  #searchInput {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 16px 20px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 1rem;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  #searchInput::placeholder { color: var(--muted); }
+
+  #searchBtn {
+    background: var(--accent);
+    border: none;
+    padding: 16px 28px;
+    color: white;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  #searchBtn:hover { background: #e02020; }
+  #searchBtn:active { transform: scale(0.97); }
+
+  /* STATUS */
+  .status {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    animation: pulse 1.5s infinite;
+  }
+
+  .status.error {
+    color: var(--accent);
+    animation: none;
+  }
+
+  /* RESULTS GRID */
+  #results {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    gap: 16px;
+    padding: 14px;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    animation: fadeUp 0.35s ease both;
+  }
+
+  .card:hover {
+    border-color: #333;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .card-thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 140px;
+    height: 86px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1a1a1a;
+  }
+
+  .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-duration {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-weight: 500;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+  }
+
+  .card-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 7px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+  }
+
+  .btn-mp3 {
+    background: rgba(255,60,60,0.12);
+    color: var(--accent);
+    border: 1px solid rgba(255,60,60,0.25);
+  }
+
+  .btn-mp3:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .btn-mp4 {
+    background: rgba(255,112,67,0.1);
+    color: var(--accent2);
+    border: 1px solid rgba(255,112,67,0.2);
+  }
+
+  .btn-mp4:hover {
+    background: var(--accent2);
+    color: white;
+    border-color: var(--accent2);
+  }
+
+  .btn-yt {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-yt:hover {
+    color: var(--text);
+    border-color: #444;
+  }
+
+  /* DOWNLOADING STATE */
+  .btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 60px 0 40px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 300;
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    display: block;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* API STATUS BADGE */
+  .api-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  .api-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #666;
+    transition: background 0.3s;
+  }
+
+  .api-dot.online { background: #4caf50; box-shadow: 0 0 6px #4caf50; }
+  .api-dot.offline { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  /* ANIMATIONS */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 560px) {
+    .card-thumb { width: 100px; height: 64px; }
+    .card-title { font-size: 0.85rem; }
+    #searchBtn { padding: 16px 18px; font-size: 0.82rem; }
+    .btn { padding: 7px 12px; font-size: 0.78rem; }
+  }
 </style>
 </head>
 <body>
-  <!-- === PASTE THE HTML FROM STEP 3 HERE === -->
-  <script>
-    const API = "https://YOUR-RENDER-URL.onrender.com"; // ← Replace this!
 
-    async function doSearch() {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) return;
-      document.getElementById('results').innerHTML = '<p class="loading">Searching...</p>';
+<div class="container">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">▶</div>
+      <div>
+        <h1>YT<span>DL</span></h1>
+      </div>
+    </div>
+    <p class="subtitle">Search and download YouTube videos as MP3 or MP4</p>
+    <div class="api-badge">
+      <div class="api-dot" id="apiDot"></div>
+      <span id="apiStatus">Checking server...</span>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search for a song, video, artist..."
+        autocomplete="off"
+      />
+      <button id="searchBtn" onclick="doSearch()">SEARCH</button>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="empty-state">
+      <span class="icon">🎵</span>
+      <p>Search for any YouTube video or song<br>to get started</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    YTDL — Running locally on your PC &nbsp;·&nbsp; Powered by yt-dlp
+  </div>
+</footer>
+
+<script>
+  // ============================================================
+  //  CONFIG — change this if your Flask app runs on a different port
+  // ============================================================
+  const API = "http://localhost:10000";
+
+  // ============================================================
+  //  CHECK IF SERVER IS ONLINE
+  // ============================================================
+  async function checkServer() {
+    const dot = document.getElementById('apiDot');
+    const status = document.getElementById('apiStatus');
+    try {
+      const res = await fetch(`${API}/`, { signal: AbortSignal.timeout(4000) });
+      if (res.ok) {
+        dot.className = 'api-dot online';
+        status.textContent = 'Server online';
+      } else {
+        throw new Error();
+      }
+    } catch {
+      dot.className = 'api-dot offline';
+      status.textContent = 'Server offline — run python app.py';
+    }
+  }
+
+  checkServer();
+
+  // ============================================================
+  //  SEARCH
+  // ============================================================
+  async function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+
+    const btn = document.getElementById('searchBtn');
+    btn.innerHTML = '<span class="spinner"></span>';
+    btn.disabled = true;
+
+    setResults(`<div class="status">Searching for <strong>"${q}"</strong>...</div>`);
+
+    try {
       const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
-      renderResults(data);
+      if (!data.length) {
+        setResults(`<div class="status error">No results found for "${q}"</div>`);
+      } else {
+        renderCards(data);
+      }
+    } catch (e) {
+      setResults(`<div class="status error">❌ Error: ${e.message}<br><small>Make sure app.py is running</small></div>`);
+    } finally {
+      btn.innerHTML = 'SEARCH';
+      btn.disabled = false;
     }
+  }
 
-    function renderResults(items) {
-      const html = items.map(v => `
-        <div class="card">
-          <img src="${v.thumbnail}" alt="${v.title}">
-          <div class="info">
-            <p class="title">${v.title}</p>
-            <p class="meta">${v.uploader} · ${v.duration}</p>
-            <div class="btns">
-              <a href="${API}/download?id=${v.id}&format=mp3" class="btn audio">⬇ MP3</a>
-              <a href="${API}/download?id=${v.id}&format=mp4" class="btn video">⬇ MP4</a>
-            </div>
+  // ============================================================
+  //  RENDER RESULT CARDS
+  // ============================================================
+  function renderCards(items) {
+    const html = items.map((v, i) => `
+      <div class="card" style="animation-delay:${i * 0.06}s">
+        <div class="card-thumb">
+          <img src="${v.thumbnail}" alt="${escHtml(v.title)}" onerror="this.src='https://img.youtube.com/vi/${v.id}/hqdefault.jpg'">
+          ${v.duration ? `<span class="card-duration">${v.duration}</span>` : ''}
+        </div>
+        <div class="card-info">
+          <div>
+            <div class="card-title" title="${escHtml(v.title)}">${escHtml(v.title)}</div>
+            <div class="card-meta">${escHtml(v.uploader)}</div>
           </div>
-        </div>`).join('');
-      document.getElementById('results').innerHTML = html;
-    }
+          <div class="card-actions">
+            <button class="btn btn-mp3" onclick="startDownload(this, '${v.id}', 'mp3')">
+              ♪ MP3
+            </button>
+            <button class="btn btn-mp4" onclick="startDownload(this, '${v.id}', 'mp4')">
+              ▶ MP4
+            </button>
+            <a href="${v.url}" target="_blank" class="btn btn-yt">
+              ↗ YouTube
+            </a>
+          </div>
+        </div>
+      </div>
+    `).join('');
 
-    document.getElementById('searchInput')
-      .addEventListener('keydown', e => e.key === 'Enter' && doSearch());
-  </script>
+    document.getElementById('results').innerHTML = html;
+  }
+
+  // ============================================================
+  //  DOWNLOAD HANDLER
+  // ============================================================
+  async function startDownload(btn, id, fmt) {
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Downloading...';
+    btn.classList.add('loading');
+
+    try {
+      // Use an anchor trick to trigger browser download
+      const url = `${API}/download?id=${id}&format=${fmt}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      // Show "done" state briefly
+      setTimeout(() => {
+        btn.innerHTML = '✓ Done!';
+        btn.classList.remove('loading');
+        setTimeout(() => {
+          btn.innerHTML = original;
+        }, 3000);
+      }, 1500);
+    } catch (e) {
+      btn.innerHTML = '✗ Failed';
+      btn.classList.remove('loading');
+      setTimeout(() => { btn.innerHTML = original; }, 3000);
+    }
+  }
+
+  // ============================================================
+  //  UTILS
+  // ============================================================
+  function setResults(html) {
+    document.getElementById('results').innerHTML = html;
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // Enter key to search
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch();
+  });
+</script>
 </body>
 </html>
