@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YT Downloader</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* === PASTE THE CSS FROM STEP 3 HERE === */
+</style>
+</head>
+<body>
+  <!-- === PASTE THE HTML FROM STEP 3 HERE === -->
+  <script>
+    const API = "https://YOUR-RENDER-URL.onrender.com"; // ← Replace this!
+
+    async function doSearch() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      document.getElementById('results').innerHTML = '<p class="loading">Searching...</p>';
+      const res = await fetch(`${API}/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderResults(data);
+    }
+
+    function renderResults(items) {
+      const html = items.map(v => `
+        <div class="card">
+          <img src="${v.thumbnail}" alt="${v.title}">
+          <div class="info">
+            <p class="title">${v.title}</p>
+            <p class="meta">${v.uploader} · ${v.duration}</p>
+            <div class="btns">
+              <a href="${API}/download?id=${v.id}&format=mp3" class="btn audio">⬇ MP3</a>
+              <a href="${API}/download?id=${v.id}&format=mp4" class="btn video">⬇ MP4</a>
+            </div>
+          </div>
+        </div>`).join('');
+      document.getElementById('results').innerHTML = html;
+    }
+
+    document.getElementById('searchInput')
+      .addEventListener('keydown', e => e.key === 'Enter' && doSearch());
+  </script>
+</body>
+</html>
